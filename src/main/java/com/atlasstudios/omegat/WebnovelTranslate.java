@@ -24,7 +24,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
-
+// ./gradlew build
 package com.atlasstudios.omegat;
 
 import java.awt.GridBagConstraints;
@@ -64,6 +64,8 @@ import org.omegat.gui.exttrans.IMachineTranslation;
 import org.omegat.util.Preferences;
 import org.omegat.util.OStrings;
 import org.xml.sax.InputSource;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Atlas Translate plugin for OmegaT (Caching translations).
@@ -120,9 +122,17 @@ public class WebnovelTranslate extends BaseTranslate {
     }
     class WNPostResponse {
 
-        public int code;
+        public Integer code;
         public String response;
     }
+
+    class MT_Response {
+
+        public Boolean success;
+        public String translation;
+    }    
+
+
 
     // Plugin setup
     public static void loadPlugins() {
@@ -221,14 +231,27 @@ public class WebnovelTranslate extends BaseTranslate {
         if (response == null) {
             return null;
         }
-        String tr = ReplaceString(response.response.substring(20, response.response.length() - 4)).replace("\\", "");
-        // .replace("\\u2014","—").replace("\\u201C","“").replace("\\u201D","”").replace("\\u2019","’").replace("\\u2026","…").replace("\\", "")
-        if (tr == null) {
-            return null;
+
+        //create ObjectMapper instance
+        ObjectMapper mapper = new ObjectMapper();
+
+        JsonNode rootNode = mapper.readTree(response.response);
+        JsonNode successNode = rootNode.path("success");
+        JsonNode translationNode = rootNode.path("translation");
+        MT_Response mt_response = new MT_Response();
+        mt_response.success = successNode.asBoolean();
+        mt_response.translation = translationNode.asText();
+        // System.out.println("success "+mt_response.success);
+        // System.out.println("translation "+mt_response.translation);
+        if (mt_response.success) {
+            putToCache(sLang, tLang, lvShorText, mt_response.translation);
+            return mt_response.translation;
         }
-        putToCache(sLang, tLang, lvShorText, tr);
-        return tr;
+        else {
+            return mt_response.translation;
+        }
     }
+
 
     protected WNPostResponse requestTranslate(Map params) throws Exception {
         WNPostResponse response = new WNPostResponse();
