@@ -87,6 +87,7 @@ public class WebnovelTranslate extends BaseTranslate {
 
     private static final String ALLOW_ATLAS_TRANSLATE = "allow_webnovel_translate";
     private static final String PROPERTY_USE_GLOSSARY = "atlas.use-glossary";
+    private static final String PROPERTY_USE_LLM = "atlas.use-llm";
     private static final int MAX_GLOSSARY_TERMS = 50;
     protected static final String USER_AGENT = "Mozilla/5.0";
 
@@ -213,6 +214,15 @@ public class WebnovelTranslate extends BaseTranslate {
         if (Preferences.getPreferenceDefault(PARAM_BOOKCODE, PARAM_BOOKCODE_DEFAULT).length() > 0) {
             p.put("bookcode", Preferences.getPreferenceDefault(PARAM_BOOKCODE, PARAM_BOOKCODE_DEFAULT));
         }
+
+        // If useLLM is true, then add the LLM parameter to the request
+        if (Preferences.isPreference(PROPERTY_USE_LLM)) {
+            p.put("usellm", "true");
+        }
+        else {
+            p.put("usellm", "false");
+        }
+
         // if (Preferences.getPreferenceDefault(PARAM_GENRE,"") != "") {
         //     lvShorText = "@@"+Preferences.getPreferenceDefault(PARAM_GENRE,"")+"@@" + lvShorText;
         // }
@@ -244,11 +254,11 @@ public class WebnovelTranslate extends BaseTranslate {
         // System.out.println("success "+mt_response.success);
         // System.out.println("translation "+mt_response.translation);
         if (mt_response.success) {
-            putToCache(sLang, tLang, lvShorText, mt_response.translation);
+            // putToCache(sLang, tLang, lvShorText, mt_response.translation);
             return mt_response.translation;
         }
         else {
-            return mt_response.translation;
+            return null;
         }
     }
 
@@ -407,6 +417,7 @@ public class WebnovelTranslate extends BaseTranslate {
         atlasPanel.add(modelIdField, gridBagConstraints);
 
         JCheckBox glossaryCheckBox = new JCheckBox(res.getString("MT_ENGINE_ATLAS_GLOSSARY"));
+        JCheckBox LLMImprovementCheckBox = new JCheckBox(res.getString("MT_ENGINE_ATLAS_USELLM"));
 
         MTConfigDialog dialog = new MTConfigDialog(parent, getName()) {
             @Override
@@ -426,6 +437,7 @@ public class WebnovelTranslate extends BaseTranslate {
                 Preferences.setPreference(PARAM_URL, urlField.getText());
 
                 Preferences.setPreference(PROPERTY_USE_GLOSSARY, glossaryCheckBox.isSelected());
+                Preferences.setPreference(PROPERTY_USE_LLM, LLMImprovementCheckBox);
             }
         };
 
@@ -435,14 +447,14 @@ public class WebnovelTranslate extends BaseTranslate {
         dialog.panel.valueLabel2.setText(res.getString("MT_ENGINE_ATLAS_PASSWORD"));
         dialog.panel.valueField2.setText(getCredential(PROPERTY_PASSWORD));
 
-        // TODO Apparently, the API URL can change if the user has their own instance.
-
         dialog.panel.temporaryCheckBox.setSelected(isCredentialStoredTemporarily(PROPERTY_PASSWORD));
         glossaryCheckBox.setSelected(Preferences.isPreferenceDefault(PROPERTY_USE_GLOSSARY, true));
+        LLMImprovementCheckBox.setSelected(Preferences.isPreferenceDefault(PROPERTY_USE_LLM, false));
 
           
         dialog.panel.itemsPanel.add(atlasPanel);
         dialog.panel.itemsPanel.add(glossaryCheckBox); 
+        dialog.panel.itemsPanel.add(LLMImprovementCheckBox); 
         dialog.show();
     }
 
