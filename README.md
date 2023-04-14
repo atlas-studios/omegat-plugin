@@ -5,7 +5,10 @@ This is built on the deprecated Yandex.Translate connector for
 OmegaT originally developed as a plugin by Ilia Vinogradov.
 
 ## Building
-This plugin uses the same Gradle build system as OmegaT version 4.3.0 and later. It is necessary to be connected to the internet to compile this project in order to get dependencies resolved.
+This plugin uses the same Gradle build system as OmegaT version 5.7.0 and later. It is necessary to be connected to the internet to compile this project in order to get dependencies resolved.
+
+To compile, use the following command:
+`./gradlew build`
 
 ## Installation
 
